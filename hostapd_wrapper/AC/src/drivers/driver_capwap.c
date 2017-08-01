@@ -78,8 +78,12 @@ struct ac_info {
 struct ac_info generic_ac_info;
 void AC_inject_frame_in_hostapd(void *priv, u8 *buf, int len);
 
-
-#ifndef CONFIG_LIBNL20
+#ifdef CONFIG_LIBNL20
+/* libnl 2.0 compatibility code */
+#define nl_handle nl_sock
+#define nl80211_handle_alloc nl_socket_alloc_cb
+#define nl80211_handle_destroy nl_socket_free
+#else
 /*
  * libnl 1.1 has a bug, it tries to allocate socket numbers densely
  * but when you free a socket again it will mess up its bitmap and
@@ -88,21 +92,6 @@ void AC_inject_frame_in_hostapd(void *priv, u8 *buf, int len);
  * accounting.
  */
 static uint32_t port_bitmap[32] = { 0 };
-
-//#ifdef CONFIG_LIBNL20
-/* libnl 2.0 compatibility code */
-#define nl_handle nl_sock
-#define nl80211_handle_alloc nl_socket_alloc_cb
-#define nl80211_handle_destroy nl_socket_free
-//#else
-/*
- * libnl 1.1 has a bug, it tries to allocate socket numbers densely
- * but when you free a socket again it will mess up its bitmap and
- * and use the wrong number the next time it needs a socket ID.
- * Therefore, we wrap the handle alloc/destroy and add our own pid
- * accounting.
- */
-//static uint32_t port_bitmap[32] = { 0 };
 
 
 static struct nl_handle *capwap_handle_alloc(void *cb){
@@ -135,18 +124,7 @@ static void capwap_handle_destroy(struct nl_handle *handle)
 	nl_handle_destroy(handle);
 }
 
-static inline int __genl_ctrl_alloc_cache(struct nl_handle *h,
-					  struct nl_cache **cache)
-{
-	struct nl_cache *tmp = genl_ctrl_alloc_cache(h);
-	if (!tmp)
-		return -ENOMEM;
-	*cache = tmp;
-	return 0;
-}
-#define genl_ctrl_alloc_cache __genl_ctrl_alloc_cache
 #endif /* CONFIG_LIBNL20 */
-
 
 struct capwap_handles {
 	struct nl_handle *handle;
