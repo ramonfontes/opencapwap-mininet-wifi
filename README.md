@@ -21,7 +21,7 @@ sudo rfkill unblock all
 sudo ifconfig wlan0 up  
 sudo ifconfig wlan1 up  
 
-###Running WTP:  
+### Running WTP:  
 interface=wlan1  
 driver=capwap_wtp  
 ssid=my-ssid  
@@ -32,9 +32,9 @@ wmm_enabled=1
 ctrl_interface=/var/run/hostapd  
 ctrl_interface_group=0  
 
-####hostapd ap.conf  
+#### hostapd ap.conf  
 
-##TO DO:  
+## TO DO:  
 Test AC  
 Upgrade the code in order to support the latest version of hostapd  
 
