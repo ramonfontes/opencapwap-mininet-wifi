@@ -1,25 +1,25 @@
 ## Building OpenCAPWAP:  
-cd openCAPWAP  
-make clean  
-make  
+* cd openCAPWAP  
+* make clean  
+* make  
 
 ## Building AC:  
-cd hostapd_wrapper/AC/hostapd  
-make clean  
-make  
-make install  
+* cd hostapd_wrapper/AC/hostapd  
+* make clean  
+* make  
+* make install  
 
 ## Building WTP:   
-cd hostapd_wrapper/WTP/hostapd  
-make clean  
-make  
-make install  
+* cd hostapd_wrapper/WTP/hostapd  
+* make clean  
+* make  
+* make install  
 
 ## Initial instructions:  
-sudo modprobe mac80211_hwsim radios=2  
-sudo rfkill unblock all  
-sudo ifconfig wlan0 up  
-sudo ifconfig wlan1 up  
+* sudo modprobe mac80211_hwsim radios=2  
+* sudo rfkill unblock all  
+* sudo ifconfig wlan0 up  
+* sudo ifconfig wlan1 up  
 
 ### Running WTP (ap.conf):  
 interface=wlan1  
@@ -32,9 +32,9 @@ wmm_enabled=1
 ctrl_interface=/var/run/hostapd  
 ctrl_interface_group=0  
 
-#### Run: hostapd -d ap.conf  
+* Run: hostapd -d ap.conf  
 
 ## TO DO:  
-Test AC  
-Upgrade the code in order to support the latest version of hostapd  
+* Test AC  
+* Upgrade the code in order to support the latest version of hostapd  
 
