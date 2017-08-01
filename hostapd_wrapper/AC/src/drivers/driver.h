@@ -35,6 +35,13 @@
 #define HOSTAPD_CHAN_HT40MINUS 0x00000020
 #define HOSTAPD_CHAN_HT40 0x00000040
 
+#ifdef CONFIG_LIBNL20
+/* libnl 2.0 compatibility code */
+#define nl_handle nl_sock
+#define capwap_handle_alloc nl_socket_alloc_cb
+#define capwap_handle_destroy nl_socket_free
+#endif /* CONFIG_LIBNL20 */
+
 /**
  * struct hostapd_channel_data - Channel information
  */
