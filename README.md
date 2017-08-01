@@ -1,3 +1,7 @@
+
+This is only the first release of openCAPWAP in order to support Mininet-WiFi. The openCAPWAP directory is a modified version of [openCAPWAP](https://github.com/ahmedshabib/openCAPWAP) and the hostapd_wrapper directory is a modified version of [opencapwap_hostapd_wrapper](https://github.com/ahmedshabib/opencapwap_hostapd_wrapper).
+
+
 ## Building OpenCAPWAP:  
 * cd openCAPWAP  
 * make clean  
