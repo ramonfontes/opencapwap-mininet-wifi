@@ -139,7 +139,7 @@ static int nl_create_handles(struct capwap_handles *handles, struct nl_cb *cb,
 	if (!handles)
 		return -1;
 
-//	handles->handle = capwap_handle_alloc(cb);
+	handles->handle = capwap_handle_alloc(cb);
 	
 	if (handles->handle == NULL) {
 		wpa_printf(MSG_ERROR, "capwap: Failed to allocate netlink "
@@ -161,7 +161,7 @@ static int nl_create_handles(struct capwap_handles *handles, struct nl_cb *cb,
 	
 	return 0;
 err:
-//	capwap_handle_destroy(handles->handle);
+	capwap_handle_destroy(handles->handle);
 	return -1;
 
 }
@@ -172,7 +172,7 @@ static void nl_destroy_handles(struct capwap_handles *handles)
 	if (handles->handle == NULL)
 		return;
 	nl_cache_free(handles->cache);
-//	capwap_handle_destroy(handles->handle);
+	capwap_handle_destroy(handles->handle);
 	handles->handle = NULL;
 }
 
