@@ -21,10 +21,10 @@ sudo rfkill unblock all
 sudo ifconfig wlan0 up  
 sudo ifconfig wlan1 up  
 
-### Running WTP:  
+### Running WTP (ap.conf):  
 interface=wlan1  
 driver=capwap_wtp  
-ssid=my-ssid  
+ssid=new-ssid  
 hw_mode=g  
 channel=1  
 wme_enabled=1  
@@ -32,7 +32,7 @@ wmm_enabled=1
 ctrl_interface=/var/run/hostapd  
 ctrl_interface_group=0  
 
-#### hostapd ap.conf  
+#### Run: hostapd -d ap.conf  
 
 ## TO DO:  
 Test AC  
