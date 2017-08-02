@@ -42,7 +42,7 @@ CC = gcc
 #LDFLAGS = -lssl -lcrypto -lpthread -ldl -D_REENTRANT
 #LDFLAGS = /usr/lib/libefence.a ./static/libssl.a ./static/libcrypto.a -lpthread -ldl -D_REENTRANT
 #LDFLAGS = ./static/libssl.a ./static/libcrypto.a -lpthread -ldl -D_REENTRANT
-LDFLAGS = /usr/lib/i386-linux-gnu/libz.a /usr/lib/i386-linux-gnu/libssl.a /usr/lib/i386-linux-gnu/libcrypto.a -lpthread -ldl -lz -D_REENTRANT
+LDFLAGS = /usr/lib/x86_64-linux-gnu/libz.a /usr/lib/x86_64-linux-gnu/libssl.a /usr/lib/x86_64-linux-gnu/libcrypto.a -lpthread -ldl -lz -D_REENTRANT
 
 CFLAGS =  -Wall -g -O0 -D_REENTRANT  
 CFLAGS += -DCW_NO_DTLS -DCW_NO_DTLSCWParseConfigurationUpdateRequest
