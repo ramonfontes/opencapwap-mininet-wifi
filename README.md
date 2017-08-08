@@ -14,31 +14,14 @@ This is only the first release of openCAPWAP in order to support Mininet-WiFi. T
 * make install  
 
 ## Building WTP:   
-* cd hostapd_wrapper/WTP/hostapd  
-* make clean  
-* make  
-* make install  
+* git clone https://github.com/ramonfontes/hostap -b hostapd-capwap-wtp
+* cd hostap   
+* ./install.sh   
 
-## Initial instructions:  
-* sudo modprobe mac80211_hwsim radios=2  
-* sudo rfkill unblock all  
-* sudo ifconfig wlan0 up  
-* sudo ifconfig wlan1 up  
-
-### Running WTP (ap.conf):  
-interface=wlan1  
-driver=capwap_wtp  
-ssid=new-ssid  
-hw_mode=g  
-channel=1  
-wme_enabled=1  
-wmm_enabled=1  
-ctrl_interface=/var/run/hostapd  
-ctrl_interface_group=0  
-
-* Run: hostapd -d ap.conf  
+## Running Mininet-WiFi with Capwap:  
+* sudu python examples/capwap-wtp.py
 
 ## TO DO:  
-* Test AC  
-* Upgrade the code in order to support the latest version of hostapd  
+* SSID isn't working
+* Upgrade the code in order to support the latest version of hostapd (WTP is now supported) 
 
