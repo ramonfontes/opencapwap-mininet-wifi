@@ -4,7 +4,7 @@
 #
 <IF_NAME>    mon.wlan0
 <WTP_ETH_IF_NAME>    vmnet1
-<RADIO_0_IF_NAME>    wlan0
+<RADIO_0_IF_NAME>    ap1-wlan1
 <BASE_MAC_IF_NAME>   vmnet1
 <BOARD_REVISION_NO>   eth0
 <WTP_MODEL_NUM>    12345678
