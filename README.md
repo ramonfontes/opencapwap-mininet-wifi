@@ -19,7 +19,7 @@ This is only the first release of openCAPWAP in order to support Mininet-WiFi. T
 * ./install.sh   
 
 ## Running Mininet-WiFi with Capwap:  
-* sudu python examples/capwap-wtp.py
+* sudo python examples/capwap-wtp.py
 
 ## TO DO:  
 * SSID isn't working
