@@ -218,6 +218,7 @@ static void nl_destroy_handles(struct capwap_handles *handles)
 #endif
 
 struct capwap_global {
+	void *ctx;
 	struct dl_list interfaces;
 	int if_add_ifindex;
 	struct netlink_data *netlink;
@@ -2960,8 +2961,7 @@ nla_put_failure:
  * Returns: 0 on success, -1 on failure or if not supported
  */
 static int wpa_driver_capwap_sched_scan(void *priv,
-					 struct wpa_driver_scan_params *params,
-					 u32 interval)
+					  struct wpa_driver_scan_params *params)
 {
 	struct i802_bss *bss = priv;
 	struct wpa_driver_capwap_data *drv = bss->drv;
@@ -2988,7 +2988,7 @@ static int wpa_driver_capwap_sched_scan(void *priv,
 
 	NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, drv->ifindex);
 
-	NLA_PUT_U32(msg, NL80211_ATTR_SCHED_SCAN_INTERVAL, interval);
+	NLA_PUT_U32(msg, NL80211_ATTR_SCHED_SCAN_INTERVAL, params->sched_scan_plans[0].interval);
 
 	if (drv->num_filter_ssids) {
 		match_sets = nlmsg_alloc();
@@ -3060,7 +3060,7 @@ static int wpa_driver_capwap_sched_scan(void *priv,
 	}
 
 	wpa_printf(MSG_DEBUG, "capwap: Sched scan requested (ret=%d) - "
-		   "scan interval %d msec", ret, interval);
+		   "scan interval %d msec", ret, params->sched_scan_plans[0].interval);
 
 nla_put_failure:
 	nlmsg_free(ssids);
@@ -4417,18 +4417,20 @@ int wpa_driver_capwap_send_frame(struct wpa_driver_capwap_data *drv,const void *
 }
 
 
-static int wpa_driver_capwap_send_mlme(void *priv, const u8 *data,
-					size_t data_len)
+static int wpa_driver_capwap_send_mlme(struct i802_bss *bss, const u8 *data,
+					size_t data_len, int noack,
+					unsigned int freq, int no_cck,
+					int offchanok,
+					unsigned int wait_time,
+					const u16 *csa_offs,
+					size_t csa_offs_len)
 {
-
-	struct i802_bss *bss = priv;
 	struct wpa_driver_capwap_data *drv = bss->drv;
 	struct ieee80211_mgmt *mgmt;
 	int encrypt = 1;
 	u16 fc;
 
 	mgmt = (struct ieee80211_mgmt *) data;
-
 
 	fc = le_to_host16(mgmt->frame_control);
 
@@ -5528,8 +5530,8 @@ static int wpa_driver_capwap_hapd_send_eapol(
 
 
 static int wpa_driver_capwap_sta_set_flags(void *priv, const u8 *addr,
-					    int total_flags,
-					    int flags_or, int flags_and)
+						 unsigned int total_flags, unsigned int flags_or,
+						 unsigned int flags_and)
 {
 
 	struct i802_bss *bss = priv;
@@ -6677,8 +6679,9 @@ static int i802_sta_deauth(void *priv, const u8 *own_addr, const u8 *addr,
 	memcpy(mgmt.bssid, own_addr, ETH_ALEN);
 	mgmt.u.deauth.reason_code = host_to_le16(reason);
 	return wpa_driver_capwap_send_mlme(bss, (u8 *) &mgmt,
-					    IEEE80211_HDRLEN +
-					    sizeof(mgmt.u.deauth));
+						IEEE80211_HDRLEN +
+						sizeof(mgmt.u.deauth), 0, 0, 0, 0,
+						0, NULL, 0);
 }
 
 
@@ -6697,8 +6700,9 @@ static int i802_sta_disassoc(void *priv, const u8 *own_addr, const u8 *addr,
 	memcpy(mgmt.bssid, own_addr, ETH_ALEN);
 	mgmt.u.disassoc.reason_code = host_to_le16(reason);
 	return wpa_driver_capwap_send_mlme(bss, (u8 *) &mgmt,
-					    IEEE80211_HDRLEN +
-					    sizeof(mgmt.u.disassoc));
+						IEEE80211_HDRLEN +
+						sizeof(mgmt.u.deauth), 0, 0, 0, 0,
+						0, NULL, 0);
 }
 
 #endif /* HOSTAPD || CONFIG_AP */
@@ -6769,7 +6773,7 @@ static int have_ifidx(struct wpa_driver_capwap_data *drv, int ifidx)
 
 
 static int i802_set_wds_sta(void *priv, const u8 *addr, int aid, int val,
-                            const char *bridge_ifname)
+		   	   	   const char *bridge_ifname, char *ifname_wds)
 {
 
 	struct i802_bss *bss = priv;
@@ -7069,7 +7073,7 @@ static void *i802_init(struct hostapd_data *hapd,
 					    WTP_inject_frame_in_air,
 					    ac_params.capa_buf);
 
-	memcpy(params->ssid, ac_params.ssid, ac_params.ssid_len);
+	memcpy((char *)params->ssid, ac_params.ssid, ac_params.ssid_len);
 	params->ssid_len = ac_params.ssid_len;
 
 	if(generic_wtp_info.fd_ipc<=0) {
@@ -7160,10 +7164,9 @@ static int capwap_p2p_interface_addr(struct wpa_driver_capwap_data *drv,
 
 
 static int wpa_driver_capwap_if_add(void *priv, enum wpa_driver_if_type type,
-				     const char *ifname, const u8 *addr,
-				     void *bss_ctx, void **drv_priv,
-				     char *force_ifname, u8 *if_addr,
-				     const char *bridge)
+				  const char *ifname, const u8 *addr, void *bss_ctx,
+				  void **drv_priv, char *force_ifname, u8 *if_addr,
+				  const char *bridge, int use_existing, int setup_ap)
 {
 
 	struct i802_bss *bss = priv;
@@ -7406,7 +7409,9 @@ static int wpa_driver_capwap_send_action(void *priv, unsigned int freq,
 	os_memcpy(hdr->addr3, bssid, ETH_ALEN);
 
 	if (is_ap_interface(drv->nlmode))
-		ret = wpa_driver_capwap_send_mlme(priv, buf, 24 + data_len);
+		ret = wpa_driver_capwap_send_mlme(bss, buf, 24 + data_len,
+				   0, freq, no_cck, 1,
+				   wait_time, NULL, 0);
 	else
 		ret = capwap_send_frame_cmd(drv, freq, wait_time, buf,
 					     24 + data_len,
@@ -7797,7 +7802,7 @@ static int capwap_set_param(void *priv, const char *param)
 }
 
 
-static void * capwap_global_init(void)
+static void * capwap_global_init(void *ctx)
 {
 	wpa_printf(MSG_DEBUG,"				1.capwap_global_init\n");
 	struct capwap_global *global;
@@ -7806,6 +7811,7 @@ static void * capwap_global_init(void)
 	global = os_zalloc(sizeof(*global));
 	if (global == NULL)
 		return NULL;
+	global->ctx = ctx;
 	global->ioctl_sock = -1;
 	dl_list_init(&global->interfaces);
 	global->if_add_ifindex = -1;
@@ -7899,22 +7905,22 @@ static int capwap_pmkid(struct i802_bss *bss, int cmd, const u8 *bssid,
 }
 
 
-static int capwap_add_pmkid(void *priv, const u8 *bssid, const u8 *pmkid)
+static int capwap_add_pmkid(void *priv, struct wpa_pmkid_params *params)
 {
 
 	struct i802_bss *bss = priv;
-	wpa_printf(MSG_DEBUG, "capwap: Add PMKID for " MACSTR, MAC2STR(bssid));
-	return capwap_pmkid(bss, NL80211_CMD_SET_PMKSA, bssid, pmkid);
+	wpa_printf(MSG_DEBUG, "capwap: Add PMKID for " MACSTR, MAC2STR(params->bssid));
+	return capwap_pmkid(bss, NL80211_CMD_SET_PMKSA, params->bssid, params->pmkid);
 }
 
 
-static int capwap_remove_pmkid(void *priv, const u8 *bssid, const u8 *pmkid)
+static int capwap_remove_pmkid(void *priv, struct wpa_pmkid_params *params)
 {
 
 	struct i802_bss *bss = priv;
 	wpa_printf(MSG_DEBUG, "capwap: Delete PMKID for " MACSTR,
-		   MAC2STR(bssid));
-	return capwap_pmkid(bss, NL80211_CMD_DEL_PMKSA, bssid, pmkid);
+		   MAC2STR(params->bssid));
+	return capwap_pmkid(bss, NL80211_CMD_DEL_PMKSA, params->bssid, params->pmkid);
 }
 
 
@@ -7927,8 +7933,9 @@ static int capwap_flush_pmkid(void *priv)
 }
 
 
-static void capwap_set_rekey_info(void *priv, const u8 *kek, const u8 *kck,
-				   const u8 *replay_ctr)
+static void capwap_set_rekey_info(void *priv, const u8 *kek, size_t kek_len,
+	       const u8 *kck, size_t kck_len,
+	       const u8 *replay_ctr)
 {
 
 	struct i802_bss *bss = priv;
@@ -7994,7 +8001,8 @@ static void capwap_poll_client(void *priv, const u8 *own_addr, const u8 *addr,
 	os_memcpy(nulldata.hdr.IEEE80211_BSSID_FROMDS, own_addr, ETH_ALEN);
 	os_memcpy(nulldata.hdr.IEEE80211_SA_FROMDS, own_addr, ETH_ALEN);
 
-	if (wpa_driver_capwap_send_mlme(bss, (u8 *) &nulldata, size) < 0)
+	if (wpa_driver_capwap_send_mlme(bss, (u8 *) &nulldata, size, 0, 0, 0,
+			 0, 0, NULL, 0) < 0)
 		wpa_printf(MSG_DEBUG, "capwap_send_null_frame: Failed to "
 			   "send poll frame");
 }
