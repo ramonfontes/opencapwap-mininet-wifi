@@ -18,4 +18,4 @@
 * sudo python examples/capwap-wtp.py
 
 ## TO DO:  
-* SSID isn't working (Why?)
+* SSID isn't working (Why?) -> How to send msg to WTP? By means of wum (via AC)?
